@@ -9,6 +9,7 @@ from omni.isaac.lab.utils import configclass
 
 # from omni.isaac.lab_tasks.manager_based.manipulation.cabinet import mdp
 
+
 # from omni.isaac.lab_tasks.manager_based.manipulation.cabinet.cabinet_env_cfg import (  # isort: skip
 #     FRAME_MARKER_SMALL_CFG,
 #     CabinetEnvCfg,
@@ -17,69 +18,62 @@ from omni.isaac.lab.utils import configclass
 import fetch_project.tasks.manipulation.cabinet.mdp as mdp
 from fetch_project.tasks.manipulation.cabinet.cabinet_env_cfg import (CabinetEnvCfg, FRAME_MARKER_SMALL_CFG)
 
-# ##
-# # Pre-defined configs
-# ##
-from fetch_project.robots.fetch import FETCH_CFG  # isort: skip
+##
+# Pre-defined configs
+##
+from omni.isaac.lab_assets.franka import FRANKA_PANDA_CFG  # isort: skip
 
 
 @configclass
-class FetchCabinetEnvCfg(CabinetEnvCfg):
+class FrankaCabinetEnvCfg(CabinetEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
 
         # Set franka as robot
-        self.scene.robot = FETCH_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = FRANKA_PANDA_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
         # Set Actions for the specific robot type (franka)
         self.actions.body_joint_pos = mdp.JointPositionActionCfg(
             asset_name="robot",
-            joint_names=["torso_lift_joint", "shoulder_pan_joint", "shoulder_lift_joint", "upperarm_roll_joint", "elbow_flex_joint", "forearm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"],
-            # joint_names=["shoulder_pan_joint", "shoulder_lift_joint", "upperarm_roll_joint", "elbow_flex_joint", "forearm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"],
+            joint_names=["panda_joint.*"],
             scale=1.0,
             use_default_offset=True,
         )
         self.actions.finger_joint_pos = mdp.BinaryJointPositionActionCfg(
             asset_name="robot",
-            joint_names=["r_gripper_finger_joint", "l_gripper_finger_joint"],
-            open_command_expr={"r_gripper_finger_joint": 0.04, "l_gripper_finger_joint": 0.04},
-            close_command_expr={"r_gripper_finger_joint": 0.0, "l_gripper_finger_joint": 0.0},
+            joint_names=["panda_finger.*"],
+            open_command_expr={"panda_finger_.*": 0.04},
+            close_command_expr={"panda_finger_.*": 0.0},
         )
 
         # Listens to the required transforms
         # IMPORTANT: The order of the frames in the list is important. The first frame is the tool center point (TCP)
         # the other frames are the fingers
         self.scene.ee_frame = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base_link",
+            prim_path="{ENV_REGEX_NS}/Robot/panda_link0",
             debug_vis=True,
             visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/EndEffectorFrameTransformer"),
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/wrist_roll_link",
+                    prim_path="{ENV_REGEX_NS}/Robot/panda_hand",
                     name="ee_tcp",
                     offset=OffsetCfg(
-                        pos=(0.183, 0.0, 0.0),
-                        # rot=(0.707, 0.0, 0.0, -0.707),
-                        rot=(0.0, 0.707, 0.707, 0.0),
+                        pos=(0.0, 0.0, 0.1034),
                     ),
                 ),
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/l_gripper_finger_link",
+                    prim_path="{ENV_REGEX_NS}/Robot/panda_leftfinger",
                     name="tool_leftfinger",
                     offset=OffsetCfg(
-                        pos=(0.015, 0.01, 0.0),
-                        # rot=(0.707, 0.0, 0.0, -0.707),
-                        rot=(0.0, 0.707, 0.707, 0.0),
+                        pos=(0.0, 0.0, 0.046),
                     ),
                 ),
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/r_gripper_finger_link",
+                    prim_path="{ENV_REGEX_NS}/Robot/panda_rightfinger",
                     name="tool_rightfinger",
                     offset=OffsetCfg(
-                        pos=(0.015, -0.01, 0.0),
-                        # rot=(0.707, 0.0, 0.0, -0.707),
-                        rot=(0.0, 0.707, 0.707, 0.0),
+                        pos=(0.0, 0.0, 0.046),
                     ),
                 ),
             ],
@@ -88,11 +82,11 @@ class FetchCabinetEnvCfg(CabinetEnvCfg):
         # override rewards
         self.rewards.approach_gripper_handle.params["offset"] = 0.04
         self.rewards.grasp_handle.params["open_joint_pos"] = 0.04
-        self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["r_gripper_finger_joint", "l_gripper_finger_joint"]
+        self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["panda_finger_.*"]
 
 
 @configclass
-class FetchCabinetEnvCfg_PLAY(FetchCabinetEnvCfg):
+class FrankaCabinetEnvCfg_PLAY(FrankaCabinetEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()

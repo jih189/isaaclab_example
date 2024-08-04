@@ -59,7 +59,7 @@ class CabinetSceneCfg(InteractiveSceneCfg):
             activate_contact_sensors=False,
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(0.8, 0, 0.4),
+            pos=(1.3, 0.0, 0.4),
             rot=(0.0, 0.0, 0.0, 1.0),
             joint_pos={
                 "door_left_joint": 0.0,
@@ -89,7 +89,7 @@ class CabinetSceneCfg(InteractiveSceneCfg):
     # Frame definitions for the cabinet.
     cabinet_frame = FrameTransformerCfg(
         prim_path="{ENV_REGEX_NS}/Cabinet/sektion",
-        debug_vis=False,
+        debug_vis=True,
         visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/CabinetFrameTransformer"),
         target_frames=[
             FrameTransformerCfg.FrameCfg(
@@ -214,14 +214,14 @@ class RewardsCfg:
 
     # 1. Approach the handle
     approach_ee_handle = RewTerm(func=mdp.approach_ee_handle, weight=2.0, params={"threshold": 0.2})
-    align_ee_handle = RewTerm(func=mdp.align_ee_handle, weight=0.5)
+    align_ee_handle = RewTerm(func=mdp.align_ee_handle, weight=1.0)
 
     # 2. Grasp the handle
     approach_gripper_handle = RewTerm(func=mdp.approach_gripper_handle, weight=5.0, params={"offset": MISSING})
     align_grasp_around_handle = RewTerm(func=mdp.align_grasp_around_handle, weight=0.125)
     grasp_handle = RewTerm(
         func=mdp.grasp_handle,
-        weight=0.5,
+        weight=1.0,
         params={
             "threshold": 0.03,
             "open_joint_pos": MISSING,
@@ -241,9 +241,9 @@ class RewardsCfg:
         params={"asset_cfg": SceneEntityCfg("cabinet", joint_names=["drawer_top_joint"])},
     )
 
-    # 4. Penalize actions for cosmetic reasons
-    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-1e-2)
-    joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=-0.0001)
+    # # 4. Penalize actions for cosmetic reasons
+    # action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-1e-3)
+    # joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=-1e-5)
 
 
 @configclass
